@@ -1,0 +1,46 @@
+body {
+    font-family: "Courier New", Courier;
+    background-color: rgb(196,196,196);
+}
+
+button {
+    font-family: "Courier New", Courier;
+}
+
+.hide {
+    display: none;
+}
+
+td {
+    text-align: left;
+}
+
+#GoalTable > tbody > tr > td,
+#LimitTable > tbody > tr > td {
+    text-align: center;
+}
+
+#output {
+    background-color: rgb(50,50,50);
+    color: white;
+    padding: 10px;
+}
+
+.infolink:after { /* https://stackoverflow.com/questions/20996228 */
+    content: '?';
+    display: inline-block;
+    font-family: sans-serif;
+    font-weight: bold;
+    text-align: center;
+    font-size: 0.8em;
+    line-height: 0.8em;
+    border-radius: 50%;
+    padding: 0.13em 0.2em 0.09em 0.2em;
+    color: inherit;
+    border: 1px solid;
+    text-decoration: none;
+}
+.infolink:hover {
+    background-color: rgb(146,146,146);
+    border-radius: 5px;
+}

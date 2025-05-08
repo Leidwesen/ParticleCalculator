@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head >
+   <meta charset="utf-8">
+   <title>Particle Calculator</title>
+   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=10.0, minimum-scale=.25, user-scalable=yes">
+
+   <link rel="stylesheet" href="css/styles.css" />
+   <script type="text/javascript" src="js/code.js"></script>
+</head>
+<body>
+  
+  <table id='HeaderTable'>
+    <tr>
+      <th>Max Particle Calculator</th>
+    </tr>
+    <tr style="height: 15px;"class=spacer />
+  </table>
+  
+  <table id='GoalTable'>
+    <tr>
+      <td><label for="init">Initial Particles</label></td>
+      <td><label for="goal">Goal Particles</label></td>
+    </tr>
+    <tr>
+      <td><input type="number" id="init" value="1000" min="0" step="10"></td>
+      <td><input id="goal" value="990"  min="0" step="10"></td>
+    </tr>
+    <tr style="height: 15px;"class=spacer />
+  </table>
+
+  <button type=button onclick=runPage()>Calculate Particles</button>
+
+  <div id="output">
+  </div>
+
+  <table id='LimitTable'>
+    <tr style="height: 15px;"class=spacer />
+    <tr>
+      <td><label for="daily">Daily Limit</label></td>
+      <td><label for="hold">Holding Limit</label></td>
+    </tr>
+    <tr>
+      <td><input type="number" id="daily" value="800" min="0" step="10"></td>
+      <td><input type="number" id="hold" value="1000"  min="0" step="10"></td>
+    </tr>
+    <tr style="height: 15px;"class=spacer />
+  </table>
+
+  <table id='StepTable'>
+    <tr><td colspan=3><u>Step Amounts</u></td></tr>
+    <tr><td><input type=checkbox /></td><td>-800</td><td>: T4 / T5 / GMax / Move 2»3</td></tr>
+    <tr><td><input type=checkbox /></td><td>-600</td><td>: Move 1»2 / Move 2»3 (Discount)</td></tr>
+    <tr><td><input type=checkbox /></td><td>-450</td><td>: Move 1»2 (Discount)</td></tr>
+    <tr><td><input type=checkbox /></td><td>-400</td><td>: T2 / T3 / Move 0»1</td></tr>
+    <tr><td><input type=checkbox /></td><td>-300</td><td>: Move 0»1 (Discount)</td></tr>
+    <tr><td><input type=checkbox /></td><td>-250</td><td>: T1</td></tr>
+    <tr><td><input type=checkbox /></td><td>+100</td><td>: Spot (stale)</td></tr>
+    <tr><td><input type=checkbox /></td><td>+120</td><td>: Spot (fresh)</td></tr>
+    <tr><td><input type=checkbox /></td><td>+300</td><td>: Walk</td></tr>
+    <tr><td><input type=checkbox /></td><td>+600</td><td>: Walk (boosted)</td></tr>
+    <tr><td><input type=checkbox /></td><td>+800</td><td>: Particle Pack</td></tr>
+    <tr><td><input type=checkbox /></td><td>+820</td><td>: Spot (8x event)</td></tr>
+    <tr style="height: 15px;"class=spacer />
+  </table>
+
+  <table id='PresetTable'>
+    <tr><td colspan=2><u>Step Presets</u></td></tr>
+    <tr>
+      <td><button type=button>Normal Day</button></td>
+      <td><button type=button>Event Discount</button></td>
+    </tr>
+    <tr>
+      <td><button type=button>DMax Event</button></td>
+      <td><button type=button>GMax Event</button></td>
+    </tr>
+    <tr style="height: 15px;"class=spacer />
+  </table>
+
+  <table id='CustomTable'>
+    <tr>
+      <td><label for="custom"><u>Custom Steps</u></label> <span class="infolink" title="Enter as a comma-separated list. Adds to any checked Steps."/></td>
+    </tr>
+    <tr><td><input type=text id="custom" placeholder="-90,+80,150"/></td><tr>
+    <tr style="height: 15px;"class=spacer />
+    <tr><td><label for="maxStep"># Steps to check</label></td></tr>
+    <tr><td><input type=number id="maxStep" value="25" min="0" step="1"/></td><tr>
+    <tr style="height: 15px;"class=spacer />
+  </table>
+  
+</body>
+</html>
