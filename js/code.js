@@ -6,10 +6,10 @@ function $Sall(selector) { return document.querySelectorAll(selector); }
 // finite quantity of a given step?
 
 const PRESETS = {
-    "Normal Day" : [-800,-600,-400,-250,120,300],
-    "Event Discount" : [-600,-450,-400,-300,-250,120,300],
-    "DMax Event" : [-800,-600,-450,-300,300,820],
-    "GMax Event" : [-800,-600,-450,-300,600,820]
+    "Normal Day"     : [[-800,-600,-400,-250,120,300], 800],
+    "Event Discount" : [[-600,-450,-400,-300,-250,120,300], 800],
+    "DMax Event"     : [[-800,-600,-450,-300,300,820], 1600],
+    "GMax Event"     : [[-800,-600,-450,-300,600,820], 1600]
 };
 const SHORTCUTS = {
     "NORMAL" :  "Normal Day",
@@ -125,12 +125,13 @@ function runPage() {
 
 function setPreset(name) {
     if (!(name in PRESETS)) return
-    const steps = PRESETS[name];
+    const [steps, daily] = PRESETS[name];
     $Sall('#StepTable tr:has(input)').forEach((r)=>{
 	let checkbox = r.querySelector('input');
 	let rowNum = Number(r.children[1].innerText)
 	checkbox.checked = steps.includes(rowNum);
     });
+    $S('#daily').value = daily;
 }
 
 window.addEventListener('load', function() {
