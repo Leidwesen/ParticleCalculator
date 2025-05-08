@@ -63,7 +63,7 @@ function route(fromN, toN_min, toN_max, move, daily, hold, maxStep) {
         idx += 1
 	inc[idx] = newInc;
     }
-    console.log(`All Unique routes to goal: ${Object.keys(goalKeys)}`)
+    //console.log(`All Unique routes to goal: ${Object.keys(goalKeys)}`)
     for (let [key,idx] of Object.entries(goalKeys)) {
 	let [N,day,part] = getKey(key)
 	if (day == bestDay) {
@@ -152,10 +152,8 @@ window.addEventListener('load', function() {
     // allow for any starting preset to be picked via URL (normal default)
     let preset = window.location.href.match(/preset=([^&]*)/i)
     if (!preset || !(preset[1].toUpperCase() in SHORTCUTS)) {
-	console.log('.')
 	setPreset("Normal Day");
     } else {
-	console.log('!')
 	setPreset(SHORTCUTS[preset[1].toUpperCase()]);
     }
     
