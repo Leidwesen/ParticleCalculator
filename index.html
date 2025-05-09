@@ -24,7 +24,7 @@
     </tr>
     <tr>
       <td><input type="number" id="init" value="1000" min="0" step="10"></td>
-      <td><input id="goal" value="990"  min="0" step="10"></td>
+      <td><input id="goal" value="500"></td>
     </tr>
     <tr style="height: 15px;"class=spacer />
   </table>
@@ -83,8 +83,20 @@
     </tr>
     <tr><td><input type=text id="custom" placeholder="-90,+80,150"/></td><tr>
     <tr style="height: 15px;"class=spacer />
-    <tr><td><label for="maxStep"># Steps to check</label></td></tr>
+    <tr><td><label for="maxStep"># Steps to check</label> <span class="infolink" title="How many steps in sequence to compute before stopping."/></td></tr>
     <tr><td><input type=number id="maxStep" value="25" min="0" step="1"/></td><tr>
+    <tr style="height: 15px;"class=spacer />
+  </table>
+
+  <table id='AutoTable'>
+    <tr>
+      <td><label for="autoTrigger">Trigger Step(s) <br>below Holding limit</label></td>
+      <td><label for="autoGain">Triggered Step</label> <span class="infolink" title="To simulate being forced to claim Spot particles when under holding."/></td>
+    </tr>
+    <tr>
+      <td><input id="autoTrigger" value="-250"></td>
+      <td><input type="number" id="autoGain" value="120" min="0" step="10"></td>
+    </tr>
     <tr style="height: 15px;"class=spacer />
   </table>
   

@@ -6,10 +6,10 @@ function $Sall(selector) { return document.querySelectorAll(selector); }
 // finite quantity of a given step?
 
 const PRESETS = {
-    "Normal Day"     : [[-800,-600,-400,-250,120,300], 800],
-    "Event Discount" : [[-600,-450,-400,-300,-250,120,300], 800],
-    "DMax Event"     : [[-800,-600,-450,-300,300,820], 1600],
-    "GMax Event"     : [[-800,-600,-450,-300,600,820], 1600]
+    "Normal Day"     : [[-800,-600,-400,-250,120,300], 800, ["-250",120]],
+    "Event Discount" : [[-600,-450,-400,-300,-250,120,300], 800, ["-250,-400",120]],
+    "DMax Event"     : [[-800,-600,-450,-300,300,820], 1600, ["-800",820]],
+    "GMax Event"     : [[-800,-600,-450,-300,600,820], 1600, ["-800",820]]
 };
 const SHORTCUTS = {
     "NORMAL" :  "Normal Day",
@@ -21,7 +21,7 @@ const SHORTCUTS = {
 function makeKey(n,day,part) { return `${n}~${day}~${part}`; }
 function getKey(key) { return key.split("~").map(Number); }
 
-function route(fromN, toN_min, toN_max, move, daily, hold, maxStep) {
+function route(fromN, toN_min, toN_max, move, daily, hold, autoTriggers, autoGain, maxStep) {
     if ((fromN >= toN_min) && (fromN <= toN_max)) return [true,fromN, [], 0, 0];
     
     let inc = {};
@@ -41,16 +41,22 @@ function route(fromN, toN_min, toN_max, move, daily, hold, maxStep) {
                 let newN = N + mov;
 		let newPart = part
 		let newDay = day
-		if (mov > 0) {
+		let triggered = false
+		if (autoTriggers.includes(mov) && (N < hold)) {
+		    triggered = true
+		    newN += autoGain
+		    newPart += autoGain
+		}
+		if ((mov > 0) || triggered) {
 		    if (newPart >= daily) {
 			newDay += 1
 			newPart -= daily
 		    }
-		    newPart += mov
+		    newPart += ((mov>0) ? mov : 0)
 		}
 		let newKey = makeKey(newN, newDay, newPart)
 		if (reached.has(newKey) || newDay > bestDay) continue
-                let newPath = path.concat([mov])
+                let newPath = (triggered ? path.concat([mov,"!",autoGain]) : path.concat([mov]));
                 if ((newN >= toN_min) && (newN <= toN_max)) {
 		    goalKeys[newKey] = idx+1
 		    bestDay = Math.min(bestDay, newDay)
@@ -73,6 +79,15 @@ function route(fromN, toN_min, toN_max, move, daily, hold, maxStep) {
     return [false,NaN,[],NaN,NaN]
 }
 
+function populateArrayFromCSL(arr, CSL) {
+    if (CSL) {
+	CSL.split(",").forEach((n)=>{
+	    let nn = Number(n);
+	    if (!isNaN(nn) && !arr.includes(nn)) arr.push(nn)
+	});
+    }
+}
+
 function runPage() {
     // yoink the inputs, iterate steps, parse custom
     const init = $S('#init').valueAsNumber,
@@ -81,7 +96,9 @@ function runPage() {
 	  daily = $S('#daily').valueAsNumber,
 	  hold = $S('#hold').valueAsNumber,
 	  maxStep = $S('#maxStep').valueAsNumber,
-	  steps = [];
+	  autoGain = $S('#autoGain').valueAsNumber,
+	  steps = [],
+	  autoTriggers = [];
     let goalMin,
 	goalMax;
     if (isNaN(goal)) {
@@ -101,21 +118,17 @@ function runPage() {
 	if (!r.querySelector('input').checked) return
 	steps.push(Number(r.children[1].innerText))
     });
-    customText = $S("#custom").value;
-    if (customText) {
-	customText.split(",").forEach((n)=>{
-	    let nn = Number(n);
-	    if (!isNaN(nn) && !steps.includes(nn)) steps.push(nn)
-	});
-    }
+    populateArrayFromCSL(steps, $S("#custom").value);
     steps.sort((a, b) => (b-a));
+    populateArrayFromCSL(autoTriggers, $S("#autoTrigger").value);
     // do the math
-    [reached, end, path, day, part] = route(init, goalMin, goalMax, steps, daily, hold, maxStep);
+    [reached, end, path, day, part] = route(init, goalMin, goalMax, steps, daily,
+					    hold, autoTriggers, autoGain, maxStep);
     // print output
     if (!reached) {
 	$S('#output').innerHTML = `Unable to go from ${init} to ${goalValue} particles<br>Using the following Steps:<br>${steps}`
     } else {
-	let pathStr = `${init} » [` + path.join("] » [") + `] » ${end}`
+	let pathStr = (`${init} » [` + path.join("] » [") + `] » ${end}`).replaceAll("] » [!] » [",",");
 	$S('#output').innerHTML = `To get from ${init} to ${end} particles:`
 	    +`<br><u>${pathStr}</u>`
 	    + ((day==0) ? "<br>No particle collecting required!" : `<br>${day} Day${day>1?'s':''} of particle collecting required`)
@@ -125,13 +138,15 @@ function runPage() {
 
 function setPreset(name) {
     if (!(name in PRESETS)) return
-    const [steps, daily] = PRESETS[name];
+    const [steps, daily, [autoTrigger,autoGain]] = PRESETS[name];
     $Sall('#StepTable tr:has(input)').forEach((r)=>{
 	let checkbox = r.querySelector('input');
 	let rowNum = Number(r.children[1].innerText)
 	checkbox.checked = steps.includes(rowNum);
     });
     $S('#daily').value = daily;
+    $S('#autoTrigger').value = autoTrigger;
+    $S('#autoGain').value = autoGain;
 }
 
 window.addEventListener('load', function() {

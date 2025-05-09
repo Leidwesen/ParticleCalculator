@@ -16,7 +16,8 @@ td {
 }
 
 #GoalTable > tbody > tr > td,
-#LimitTable > tbody > tr > td {
+#LimitTable > tbody > tr > td,
+#AutoTable > tbody > tr > td {
     text-align: center;
 }
 
