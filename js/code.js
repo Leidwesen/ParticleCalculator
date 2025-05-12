@@ -9,13 +9,13 @@ const PRESETS = {
     "Normal Day"     : [[-800,-600,-400,-250,120,300], 800, ["-250",120]],
     "Event Discount" : [[-600,-450,-400,-300,-250,120,300], 800, ["-250,-400",120]],
     "DMax Event"     : [[-800,-600,-450,-300,300,820], 1600, ["-800",820]],
-    "GMax Event"     : [[-800,-600,-450,-300,600,820], 1600, ["-800",820]]
+    "GMax Event"     : [[-800,-600,-400,600,820], 1600, ["-800",820]]
 };
 const SHORTCUTS = {
-    "NORMAL" :  "Normal Day",
+    "NORMAL"   :  "Normal Day",
     "DISCOUNT" : "Event Discount",
-    "DMAX" : "DMax Event",
-    "GMAX" : "GMax Event"
+    "DMAX"     : "DMax Event",
+    "GMAX"     : "GMax Event"
 };
 
 function makeKey(n,day,part) { return `${n}~${day}~${part}`; }
