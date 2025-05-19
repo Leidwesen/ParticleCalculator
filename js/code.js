@@ -12,7 +12,7 @@ const PRESETS = {
     "GMax Event"     : [[-800,-600,-400,600,820], 1600, ["-800",820]]
 };
 const SHORTCUTS = {
-    "NORMAL"   :  "Normal Day",
+    "NORMAL"   : "Normal Day",
     "DISCOUNT" : "Event Discount",
     "DMAX"     : "DMax Event",
     "GMAX"     : "GMax Event"
