@@ -91,6 +91,23 @@ function populateArrayFromCSL(arr, CSL) {
     }
 }
 
+function route2String(routeInfo, steps, settings) {
+    let [reached, end, path, day, part] = routeInfo,
+	[init, goalValue, autoGain] = settings;
+    if (!reached) {
+	s = `Unable to go from ${init} to ${goalValue} particles<br>Using the following Steps:<br>${steps}`
+    } else {
+	let pathStr = (`${init} » [` + path.join("] » [") + `] » ${end}`).replaceAll("] » [!] » [",",");
+	s = `To get from ${init} to ${end} particles:`
+	    +`<br><u>${pathStr}</u>`
+	    + ((day==0) ? "<br>No particle collecting required!" : `<br>${day} Day${day>1?'s':''} of particle collecting required`)
+	if (path.includes("!") && !steps.includes(autoGain)) {
+	    s += `<br>Warning: Forced Collection [${autoGain}] is not a selected step amount`
+	}
+    }
+    return s;
+}
+
 function runPage() {
     // yoink the inputs, iterate steps, parse custom
     const init = $S('#init').valueAsNumber,
@@ -125,17 +142,10 @@ function runPage() {
     steps.sort((a, b) => (b-a));
     populateArrayFromCSL(autoTriggers, $S("#autoTrigger").value);
     // do the math
-    [reached, end, path, day, part] = route(init, goalMin, goalMax, steps, daily,
-					    hold, autoTriggers, autoGain, maxStep);
+    routeInfo = route(init, goalMin, goalMax, steps, daily,
+		      hold, autoTriggers, autoGain, maxStep);
     // print output
-    if (!reached) {
-	$S('#output').innerHTML = `Unable to go from ${init} to ${goalValue} particles<br>Using the following Steps:<br>${steps}`
-    } else {
-	let pathStr = (`${init} » [` + path.join("] » [") + `] » ${end}`).replaceAll("] » [!] » [",",");
-	$S('#output').innerHTML = `To get from ${init} to ${end} particles:`
-	    +`<br><u>${pathStr}</u>`
-	    + ((day==0) ? "<br>No particle collecting required!" : `<br>${day} Day${day>1?'s':''} of particle collecting required`)
-    }
+    $S('#output').innerHTML = route2String(routeInfo, steps, [init, goalValue, autoGain])
 }
 
 
