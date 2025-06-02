@@ -2,8 +2,10 @@ function $S(selector) { return document.querySelector(selector); }
 function $Sall(selector) { return document.querySelectorAll(selector); }
 
 // TODO
-// 'show all routes' option
-// finite quantity of a given step?
+// end-of-day marker in route
+// finite quantity of a given step
+// "day planner" mode
+// "particle pack" can only be redeemed when < battle cost
 
 const PRESETS = {
     // "Name" : [steps, daily limit, [forcing step, forced gain]]
@@ -28,10 +30,10 @@ Object.entries(SHORTCUTS).forEach(([key,val]) => {
 });
 
 function route(fromN, toN_min, toN_max, move, daily, hold, autoTriggers, autoGain, maxStep) {
-    function makeKey(n,day,part) { return `${n}~${day}~${part}`; }
+    function makeKey(n,day,part) { return `${n}~${day}~${part}`; } // Cur particle, days col, daily gain
     function getKey(key) { return key.split("~").map(Number); }
     
-    if ((fromN >= toN_min) && (fromN <= toN_max)) return [true,fromN, [], 0, 0];
+    if ((fromN >= toN_min) && (fromN <= toN_max)) return [[true,fromN, [], 0, 0]];
     
     let inc = {};
     let key = makeKey(fromN,1,0)
@@ -44,22 +46,22 @@ function route(fromN, toN_min, toN_max, move, daily, hold, autoTriggers, autoGai
     while (idx < maxStep) {
         newInc = {};
         for (let [key,path] of Object.entries(inc[idx])) {
+	    if (key in goalKeys) continue;
 	    const [N,day,part] = getKey(key);
             for (mov of move) {
                 if ( (mov > 0 && N >= hold) || (mov < 0 && (N+mov < 0)) ) continue
                 let newN = N + mov;
 		let newPart = part
 		let newDay = day
-		let triggered = false
-		if (autoTriggers.includes(mov) && (N < hold)) {
-		    triggered = true
+		let triggered = (autoTriggers.includes(mov) && (N < hold))
+		if  (triggered) {
 		    newN += autoGain
 		    newPart += autoGain
 		}
 		if ((mov > 0) || triggered) {
 		    if (newPart >= daily) {
 			newDay += 1
-			newPart -= daily
+			newPart = 0
 		    }
 		    newPart += ((mov>0) ? mov : 0)
 		}
@@ -78,29 +80,37 @@ function route(fromN, toN_min, toN_max, move, daily, hold, autoTriggers, autoGai
         idx += 1
 	inc[idx] = newInc;
     }
-    //console.log(`All Unique routes to goal: ${Object.keys(goalKeys)}`)
+    //console.log(`All Unique routes to goal: ${Object.keys(goalKeys).join('\n')}`)
+    ret = []
     for (let [key,idx] of Object.entries(goalKeys)) {
 	let [N,day,part] = getKey(key)
 	if (day == bestDay) {
-	    return [true,N,inc[idx][key],day,part]
+	    ret.push([true,N,inc[idx][key],day,part])
 	}
     }
-    return [false,NaN,[],NaN,NaN]
+    if (ret.length > 0) return ret;
+    return [[false,NaN,[],NaN,NaN]]
 }
 
-function route2String(routeInfo) {
+function route2String(routeInfo, reducedOutput) {
     let [reached, end, path, day, part] = routeInfo;
     if (!reached) {
 	s = `Unable to go from ${Data.init} to ${Data.goalStr} particles`
 	    +`<br>Using the following Steps:<br>${Data.steps}`
     } else {
-	let pathStr = (`${Data.init} » [`+path.join("] » [")+`] » ${end}`).replaceAll("] » [!] » [",",");
-	s = `To get from ${Data.init} to ${end} particles:`
-	    +`<br><u>${pathStr}</u>`
-	    + ((day==0) ? "<br>No particle collecting required!"
-	       : `<br>${day} Day${day>1?'s':''} of particle collecting required`)
+	let pathStr = (`${Data.init} » [`+path.join("] » [")+`] » ${end}`).replaceAll("] » [!] » [",","),
+	    warning = `<br>Warning: Forced Collection [${Data.forcedGain}] is not a selected step amount`;
+
+	if (reducedOutput) {
+	    s = pathStr
+	} else {
+	    s = `To get from ${Data.init} to ${end} particles:`
+		+`<br><u>${pathStr}</u>`
+		+ ((day==0) ? "<br>No particle collecting required!"
+		   : `<br>${day} Day${day>1?'s':''} of particle collecting required`)
+	}
 	if (path.includes("!") && !Data.steps.includes(Data.forcedGain)) {
-	    s += `<br>Warning: Forced Collection [${Data.forcedGain}] is not a selected step amount`
+	    s += warning
 	}
     }
     return s;
@@ -137,12 +147,11 @@ const Data = {
     preset_fields : ["daily", "autoTrigger", "autoGain"],
 
     populateArrayFromCSL(arr, CSL) {
-	if (CSL) {
-	    CSL.split(",").forEach((n)=>{
-		let nn = Number(n);
-		if (!isNaN(nn) && !arr.includes(nn)) arr.push(nn)
-	    });
-	}
+	if (!CSL) return
+	CSL.split(",").forEach((n)=>{
+	    let nn = Number(n);
+	    if (!isNaN(nn) && !arr.includes(nn)) arr.push(nn)
+	});
     },
     
     readForm() {
@@ -190,7 +199,6 @@ const Data = {
 	s = "?"
 	active_preset = $S('.preset-active')
 	if (active_preset) {
-	    console.log(active_preset);
 	    s += `preset=${SHORTCUTS[active_preset.innerText]}&`
 	}
 	for (const [key, val] of Object.entries(this.mappings)) {
@@ -254,6 +262,24 @@ const Data = {
     },
 }
 
+const SYMBOL = {
+    closed : "▶",
+    open : "▼"
+}
+function toggleExtraRoutes() {
+    let extraText = $S('#extraRouteText')
+    let extraButton = $S('#extraRouteClick')
+    if (!extraButton) return;
+    let hidden = (!extraText.style.height)
+    if (hidden) {
+	extraButton.innerHTML = extraButton.innerHTML.replace(SYMBOL.closed,SYMBOL.open);
+	extraText.style.height = extraText.scrollHeight + 'px';
+    } else {
+	extraButton.innerHTML = extraButton.innerHTML.replace(SYMBOL.open,SYMBOL.closed);
+	extraText.style.height = null;
+    }
+}
+
 function runPage() {
     let [valid, err] =  Data.readForm();
     if (!valid) {
@@ -261,10 +287,19 @@ function runPage() {
 	return;
     }
     // do the math
-    routeInfo = route(Data.init, Data.goalMin, Data.goalMax, Data.steps, Data.daily,
-		      Data.hold, Data.forceTriggers, Data.forcedGain, Data.iterations);
+    routeInfos = route(Data.init, Data.goalMin, Data.goalMax, Data.steps, Data.daily,
+		       Data.hold, Data.forceTriggers, Data.forcedGain, Data.iterations);
+    
     // print output
-    $S('#output').innerHTML = route2String(routeInfo);
+    routeOut = routeInfos.map((routeInfo,ix,_)=>{return '<p>'+route2String(routeInfo,ix!=0)+'</p>'});
+    if (routeOut.length>1) {
+	routeOut = [routeOut[0],
+		    `<button id=extraRouteClick onclick=toggleExtraRoutes()>See More ${SYMBOL.closed}</button>`,
+		    "<span id=extraRouteText>",
+		    ...routeOut.slice(1), "</span>"]
+    }
+    routeOut = routeOut.join("")
+    $S('#output').innerHTML = routeOut
 }
 
 function exportURL() {

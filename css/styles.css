@@ -1,10 +1,10 @@
 body {
-    font-family: "Courier New", Courier;
     background-color: rgb(196,196,196);
 }
 
+body,
 button {
-    font-family: "Courier New", Courier;
+    font-family: "Courier New", Courier, monospace;
 }
 
 .hide {
@@ -27,23 +27,25 @@ td {
     padding: 10px;
 }
 
-.infolink:after { /* https://stackoverflow.com/questions/20996228 */
-    content: '?';
-    display: inline-block;
-    font-family: sans-serif;
-    font-weight: bold;
-    text-align: center;
-    font-size: 0.8em;
-    line-height: 0.8em;
-    border-radius: 50%;
-    padding: 0.13em 0.2em 0.09em 0.2em;
-    color: inherit;
-    border: 1px solid;
-    text-decoration: none;
-}
-.infolink:hover {
-    background-color: rgb(146,146,146);
-    border-radius: 5px;
+.infolink {
+    &:after {/* https://stackoverflow.com/questions/20996228 */
+	content: '?';
+	display: inline-block;
+	font-family: sans-serif;
+	font-weight: bold;
+	text-align: center;
+	font-size: 0.8em;
+	line-height: 0.8em;
+	border-radius: 50%;
+	padding: 0.13em 0.2em 0.09em 0.2em;
+	color: inherit;
+	border: 1px solid;
+	text-decoration: none;
+    }
+    &:hover {
+	background-color: rgb(146,146,146);
+	border-radius: 5px;
+    }
 }
 
 a:link {
@@ -52,4 +54,26 @@ a:link {
 
 .preset-active {
     box-shadow: 0 0 2px 1px #008141;
+    font-weight:bold;
+}
+
+#output p {
+    margin-top: 0px;
+}
+
+#extraRouteText {
+    height:0px;
+    overflow:hidden;
+    display:block;
+    transition: height 0.314s ease-in-out;
+    & p:first-child {
+	margin-top: 16px;
+    }
+    & p:last-child {
+	margin-bottom: 0px;
+    }
+}
+
+#extraRouteClick {
+    height:1.8em; /* pesky unicode resizing issue */
 }

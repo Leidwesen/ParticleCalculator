@@ -29,11 +29,14 @@
     <tr style="height: 15px;"class=spacer />
   </table>
 
-  <button type=button onclick=runPage()>Calculate Particles</button>
-  <button type=button onclick=exportURL()>Export Settings</button>
+  <table id='executionTable'>
+    <tr>
+      <td><button type=button onclick=runPage()>Calculate Particles</button>
+	<button type=button onclick=exportURL()>Export Settings</button></td>
+    </tr>
+  </table>
 
-  <div id="output">
-  </div>
+  <div id="output"></div>
 
   <table id='LimitTable'>
     <tr style="height: 15px;"class=spacer />
