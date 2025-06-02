@@ -2,7 +2,6 @@ function $S(selector) { return document.querySelector(selector); }
 function $Sall(selector) { return document.querySelectorAll(selector); }
 
 // TODO
-// end-of-day marker in route
 // finite quantity of a given step
 // "day planner" mode
 // "particle pack" can only be redeemed when < battle cost...
@@ -39,8 +38,9 @@ function route(fromN, toN_min, toN_max, move, daily,
 	       hold, autoTriggers, autoGain, maxStep) {
     function makeKey(n,day,part) { return `${n}~${day}~${part}`; }
     function getKey(key) { return key.split("~").map(Number); }
+    function isBetween(val,low,upp) { return (low <= val) && (val <= upp); }
     
-    if ((fromN >= toN_min) && (fromN <= toN_max)) return [[true,fromN,[],0,0]];
+    if (isBetween(fromN, toN_min, toN_max)) return [[true,fromN,[],0,0]];
     
     let inc = {};
     let key = makeKey(fromN,1,0);
@@ -51,26 +51,26 @@ function route(fromN, toN_min, toN_max, move, daily,
     goalKeys = {}
     bestDay = Infinity
     while (idx < maxStep) {
-        newInc = {};
-        for (let [key,path] of Object.entries(inc[idx])) {
+	idx += 1;
+	inc[idx] = {}
+        for (let [key,path] of Object.entries(inc[idx-1])) {
 	    if (key in goalKeys) continue;
 	    const [N,day,part] = getKey(key);
             for (mov of move) {
-                if ((mov > 0 && N >= hold)||(mov < 0 && (N+mov < 0))) continue;
+                if ((mov > 0 && N >= hold)||(N+mov < 0)) continue;
                 let newN = N + mov; // Current Particle Count
 		let newPart = part; // Current Daily Particle Gain
 		let newDay = day;   // Current Days of Particle Collection
 		
 		let triggered = (autoTriggers.includes(mov) && (N < hold));
 
-		if ((mov > 0) || triggered) {
-		    if (newPart >= daily) {
-			newDay += 1;
-			newPart = 0;
-		    }
-		    newPart += ((mov>0) ? mov : 0);
+		let dayChange = (newPart >= daily) && ((mov > 0) || triggered);
+		if (dayChange) {
+		    newDay += 1
+		    newPart = 0
 		}
-		
+
+		newPart += Math.max(0,mov)
 		if  (triggered) {
 		    newN += autoGain;
 		    newPart += autoGain;
@@ -78,22 +78,20 @@ function route(fromN, toN_min, toN_max, move, daily,
 		
 		let newKey = makeKey(newN, newDay, newPart)
 		if (reached.has(newKey) || newDay > bestDay) continue;
+		reached.add(newKey);
 		
-		let newPath = path.concat([mov]);
-		if (triggered) newPath.push(...["!",autoGain]);
-		
-                if ((newN >= toN_min) && (newN <= toN_max)) {
-		    goalKeys[newKey] = idx+1;
+		if (isBetween(newN, toN_min, toN_max)) {
+		    goalKeys[newKey] = idx;
 		    bestDay = Math.min(bestDay, newDay);
-                    //return [true, newN, newPath, newDay, newPart]
 		}
 		
-                reached.add(newKey);
-		newInc[newKey] = newPath;
+		let newPath = path.slice(0)
+		if (dayChange) newPath.push("»");
+		newPath.push(mov);
+		if (triggered) newPath.push(...["!",autoGain]);
+		inc[idx][newKey] = newPath;
 	    }
 	}
-        idx += 1;
-	inc[idx] = newInc;
     }
     //console.log(`All routes:\n${Object.keys(goalKeys).join('\n')}`)
     ret = [];
@@ -115,6 +113,7 @@ function route2String(routeInfo, reducedOutput) {
     }
     let pathStr = (`${Data.init} » [`+path.join("] » [")+`] » ${end}`);
     pathStr = pathStr.replaceAll("] » [!] » [",",");
+    pathStr = pathStr.replaceAll("» [»] »","⟩⟩");
     let warning = '';
     if (path.includes("!") && !Data.steps.includes(Data.forcedGain)) {
 	warning = `<br>Warning: Forced Collection [${Data.forcedGain}] `
@@ -242,25 +241,24 @@ const Data = {
 
     loadFromURL() {
 	URL = window.location.href.split("?")[1];
-	if (URL) {
-	    var values = URL.split("&");
-	    for (i=0; i<values.length; i++) {
-		if (0==values[i].length) continue;
-		let [prop, val] = values[i].split("=");
-		if (prop=="preset" && (val.toUpperCase() in SHORTCUTS)) {
-		    // load preset
-		    setPreset(SHORTCUTS[val.toUpperCase()]);
-		} else if (prop=="steps") {
-		    // check appropriate steps
-		    let steps = val.split(",").map(Number);
-		    $Sall('#StepTable tr:has(input)').forEach((r)=>{
-			let checkbox = r.querySelector('input');
-			let rowNum = Number(r.children[1].innerText);
-			checkbox.checked = steps.includes(rowNum);
-		    });
-		} else {
-		    this.update(prop, val);
-		}
+	if (!URL) return;
+	let values = URL.split("&");
+	for (i=0; i<values.length; i++) {
+	    if (0==values[i].length) continue;
+	    let [prop, val] = values[i].split("=");
+	    if (prop=="preset" && (val.toUpperCase() in SHORTCUTS)) {
+		// load preset
+		setPreset(SHORTCUTS[val.toUpperCase()]);
+	    } else if (prop=="steps") {
+		// check appropriate steps
+		let steps = val.split(",").map(Number);
+		$Sall('#StepTable tr:has(input)').forEach((r)=>{
+		    let checkbox = r.querySelector('input');
+		    let rowNum = Number(r.children[1].innerText);
+		    checkbox.checked = steps.includes(rowNum);
+		});
+	    } else {
+		this.update(prop, val);
 	    }
 	}
     },
