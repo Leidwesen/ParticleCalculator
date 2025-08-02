@@ -17,9 +17,9 @@ const PRESETS = {
     "GMax Event"     : [[-800,-600,-400,600,820], 1600,
 			["-800",820]], // 8xS, 2xW, no discount
     "June 2025 GMax Weekday" : [[-800,-600,-400,-250,300,820], 1600,
-				["-250",820]], // 8xS, no W, no disc
+				["-250",820]], // 8xS, 1xW, no disc
     "June 2025 GMax Weekend" : [[-800,-600,-400,300,820], 1600,
-				["-800",820]], // 8xS, no W, GMax around
+				["-800",820]], // 8xS, 1xW, GMax around
 };
 
 const SHORTCUTS = {
@@ -34,50 +34,70 @@ Object.entries(SHORTCUTS).forEach(([key,val]) => {
     SHORTCUTS[val] = key; // make bidirectional
 });
 
-function route(fromN, toN_min, toN_max, move, daily,
-	       hold, autoTriggers, autoGain, maxStep) {
-    function makeKey(n,day,part) { return `${n}~${day}~${part}`; }
+//const width = 0; // 0 = [], 1 = [daily], 2 = [all] (temp)
+function route(DataObj) {
+    const fromN = DataObj.init,
+	  toN_min = DataObj.goalMin,
+	  toN_max = DataObj.goalMax,
+	  move = DataObj.steps,
+	  daily = DataObj.daily,
+	  hold = DataObj.hold,
+	  autoTriggers = DataObj.forceTriggers,
+	  autoGain = DataObj.forcedGain,
+	  maxStep = DataObj.iterations,
+	  width = Number(DataObj.searchWidth);
+    function makeKey(n,day,part,actions) {
+	return `${n}~${day}~${part}~${actions.join("~")}`;
+    }
     function getKey(key) { return key.split("~").map(Number); }
     function isBetween(val,low,upp) { return (low <= val) && (val <= upp); }
     
     if (isBetween(fromN, toN_min, toN_max)) return [[true,fromN,[],0,0]];
     
     let inc = {};
-    let key = makeKey(fromN,1,0);
+    let key = makeKey(fromN,1,0,[0]); // []->""->[""]->[0]
     inc[0] = {[key]:[]}
     let reached = new Set([key]);
     let idx = 0;
 
-    goalKeys = {}
-    bestDay = Infinity
+    goalKeys = {};
+    bestDay = Infinity;
     while (idx < maxStep) {
 	idx += 1;
-	inc[idx] = {}
+	inc[idx] = {};
         for (let [key,path] of Object.entries(inc[idx-1])) {
 	    if (key in goalKeys) continue;
-	    const [N,day,part] = getKey(key);
+	    const [N,day,part,...actions] = getKey(key);
             for (mov of move) {
                 if ((mov > 0 && N >= hold)||(N+mov < 0)) continue;
                 let newN = N + mov; // Current Particle Count
-		let newPart = part; // Current Daily Particle Gain
 		let newDay = day;   // Current Days of Particle Collection
+		let newPart = part; // Current Daily Particle Gain
+		let newActions = actions.slice(0); // Collection of Actions
 		
 		let triggered = (autoTriggers.includes(mov) && (N < hold));
-
-		let dayChange = (newPart >= daily) && ((mov > 0) || triggered);
+		
+		let dayChange = (part >= daily) && ((mov > 0) || triggered);
 		if (dayChange) {
-		    newDay += 1
-		    newPart = 0
+		    newDay += 1;
+		    newPart = 0;
+		    if (width == 1) { newActions = []; }
 		}
-
-		newPart += Math.max(0,mov)
+		if (newDay > bestDay) continue;
+		
+		newPart += Math.max(0,mov);
+		newActions.push(mov);
 		if  (triggered) {
 		    newN += autoGain;
 		    newPart += autoGain;
+		    newActions.push(autoGain);
+		    newActions.push(NaN);
 		}
+		newActions.sort();
 		
-		let newKey = makeKey(newN, newDay, newPart)
-		if (reached.has(newKey) || newDay > bestDay) continue;
+		let newKey = makeKey(newN, newDay, newPart,
+				     (width == 0 ? [] : newActions) );
+		if (reached.has(newKey)) continue;
 		reached.add(newKey);
 		
 		if (isBetween(newN, toN_min, toN_max)) {
@@ -85,7 +105,7 @@ function route(fromN, toN_min, toN_max, move, daily,
 		    bestDay = Math.min(bestDay, newDay);
 		}
 		
-		let newPath = path.slice(0)
+		let newPath = path.slice(0);
 		if (dayChange) newPath.push("»");
 		newPath.push(mov);
 		if (triggered) newPath.push(...["!",autoGain]);
@@ -96,7 +116,7 @@ function route(fromN, toN_min, toN_max, move, daily,
     //console.log(`All routes:\n${Object.keys(goalKeys).join('\n')}`)
     ret = [];
     for (let [key,idx] of Object.entries(goalKeys)) {
-	let [N,day,part] = getKey(key)
+	let [N,day,part,...actions] = getKey(key)
 	if (day == bestDay) {
 	    ret.push([true,N,inc[idx][key],day,part]);
 	}
@@ -133,6 +153,7 @@ const Data = {
     hold : null,
     iterations : null,
     forcedGain : null,
+    searchWidth : null,
 
     goalStr : null,
     customStr : null,
@@ -145,14 +166,17 @@ const Data = {
     goalMax : null,
 
     mappings : {
+	// encode_key : [Object_key, HTML_id, input_type]
+	// N = number Input, T = text Input, B = checkbox (yet unused)
 	"i" : ["init", "init", "N"],
+	"g" : ["goalStr", "goal", "T"],
 	"d" : ["daily", "daily", "N"],
 	"h" : ["hold", "hold", "N"],
 	"a" : ["forcedGain", "autoGain", "N"],
 	"m" : ["iterations", "maxStep", "N"],
-	"g" : ["goalStr", "goal", "T"],
 	"c" : ["customStr", "custom", "T"],
 	"t" : ["forceStr", "autoTrigger","T"],
+	"w" : ["searchWidth", "searchWidth", "T"], // select can be as Input...
 	// Step Table
     },
     preset_fields : ["daily", "autoTrigger", "autoGain"],
@@ -295,12 +319,7 @@ function runPage() {
 	$S('#output').innerHTML = err;
 	return;
     }
-    // do the math
-    routeInfos = route(Data.init, Data.goalMin, Data.goalMax, Data.steps,
-		       Data.daily, Data.hold, Data.forceTriggers,
-		       Data.forcedGain, Data.iterations);
-    
-    // print output
+    routeInfos = route(Data);
     routeOut = routeInfos.map((routeInfo,ix,_)=>{
 	return '<p>'+route2String(routeInfo,ix!=0)+'</p>';
     });

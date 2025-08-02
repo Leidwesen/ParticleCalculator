@@ -78,15 +78,35 @@
       <td><button type=button>DMax Event</button></td>
       <td><button type=button>GMax Event</button></td>
     </tr>
-    <tr><td colspan=2><button type=button>June 2025 GMax Weekday</button></td></tr>
-    <tr><td colspan=2><button type=button>June 2025 GMax Weekend</button></td></tr>
+    <!-- <tr><td colspan=2><button type=button>June 2025 GMax Weekday</button></td></tr> -->
+    <!-- <tr><td colspan=2><button type=button>June 2025 GMax Weekend</button></td></tr> -->
+    <tr style="height: 15px;"class=spacer />
+  </table>
+
+  <u>Advanced Settings</u>
+
+  <table id='AdvancedTable'>
+    <tr style="height: 15px;"class=spacer />
+    <tr><td>
+	<label for="searchWidth">Breadth of Search</label>
+	<span class="infolink"
+	      title="By reducing duplication filtering, the program can compute more routes, but may take significantly longer for bigger searches."/>
+    </td></tr>
+    <tr><td>
+	<select id="searchWidth">
+	  <option value=0 selected>Faster, Fewer Options</option>
+	  <!-- <option value=1>Compromise</option>-->
+	  <!-- Testing showed 1 v 2 were roughly the same in practice -->
+	  <option value=2>More Options, Slower</option>
+	</select>
+    </td></tr>
     <tr style="height: 15px;"class=spacer />
   </table>
 
   <table id='AutoTable'>
     <tr>
       <td><label for="autoTrigger">Forcing Step(s)<br>below Holding limit</label></td>
-      <td><label for="autoGain">Forced Step<br>Collection Amount</label> <span class="infolink" title="To simulate being forced to claim Spot particles when under holding."/></td>
+      <td><label for="autoGain">Forced Step<br>Collection Amount</label> <span class="infolink" title="To simulate being forced to claim Spot particles when under the holding limit."/></td>
     </tr>
     <tr>
       <td><input id="autoTrigger" value="-250"></td>
@@ -97,7 +117,7 @@
 
   <table id='CustomTable'>
     <tr>
-      <td><label for="custom">Custom Steps</label> <span class="infolink" title="Enter as a comma-separated list. Adds to any checked Steps."/></td>
+      <td><label for="custom">Custom Steps</label> <span class="infolink" title="Enter as a comma-separated list. Adds as options along any checked Steps."/></td>
     </tr>
     <tr><td><input type=text id="custom" placeholder="-90,+80,150"/></td><tr>
     <tr style="height: 15px;"class=spacer />
